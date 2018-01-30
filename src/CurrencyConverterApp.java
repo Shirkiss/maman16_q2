@@ -1,26 +1,31 @@
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 
 /**
- * Created by shir.cohen on 1/28/2018.
+ * CurrencyConverterApp.java
+ * Purpose: show the frame of the currency converter
+ *
+ * @author Shir Cohen
  */
-public class Client extends JFrame {
+class CurrencyConverterApp extends JFrame {
     private JTextField valueField;
-    private JButton submitButton;
     private JComboBox currencyComboFrom;
     private JComboBox currencyComboTo;
     private String[] currencies = {"USD", "EUR", "INR", "ILS", "AUD", "GBP"};
-    private DatagramPacket p;
+    private DatagramPacket datagramPacket;
     private DatagramSocket socket;
 
-    Client() {
-        super("Client");
+    CurrencyConverterApp() {
+        super("currencyConverterApp");
         JPanel currencyPanel = new JPanel(new GridLayout(4, 2, 10, 10));
         JPanel buttonPanel = new JPanel();
 
@@ -43,7 +48,7 @@ public class Client extends JFrame {
         currencyPanel.add(resultLabel);
         currencyPanel.add(resultField);
 
-        submitButton = new JButton("Convert");
+        JButton submitButton = new JButton("Convert");
         submitButton.addActionListener(e -> {
             String message = currencies[currencyComboFrom.getSelectedIndex()] + "-" + currencies[currencyComboTo.getSelectedIndex()] + "-"
                     + valueField.getText();
@@ -59,15 +64,19 @@ public class Client extends JFrame {
             }
         });
         buttonPanel.add(submitButton);
-
         add(currencyPanel, BorderLayout.NORTH);
         add(buttonPanel, BorderLayout.SOUTH);
-
     }
 
-    private boolean isValidValue(String message) {
+    /**
+     * Check if the text inside of the field is a float
+     *
+     * @param text to check
+     * @return true if the value is valid and false otherwise
+     */
+    private boolean isValidValue(String text) {
         try {
-            Double.parseDouble(message);
+            Double.parseDouble(text);
             return true;
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Please enter only float numbers!"
@@ -77,6 +86,11 @@ public class Client extends JFrame {
         }
     }
 
+    /**
+     * Send message to the server
+     *
+     * @param message to send
+     */
     private String sendMessage(String message) {
         try {
             socket = new DatagramSocket();
@@ -88,9 +102,9 @@ public class Client extends JFrame {
             String packetId = dateFormat.format(date);
 
             data = (packetId + ";" + message).getBytes();
-            System.out.println("Client>> Sending packet containing: " + data);
-            p = new DatagramPacket(data, data.length, address, 7777);
-            socket.send(p);
+            System.out.println("currencyConverterApp>> Sending packet containing: " + data);
+            datagramPacket = new DatagramPacket(data, data.length, address, 7777);
+            socket.send(datagramPacket);
             return packetId;
         } catch (IOException e) {
             e.printStackTrace();
@@ -98,22 +112,27 @@ public class Client extends JFrame {
         return null;
     }
 
+    /**
+     * Get response from the server on a specific request id
+     *
+     * @param packetId to identify the request
+     */
     private String getResponse(String packetId) {
         byte[] message = new byte[256];
-        p = new DatagramPacket(message, message.length);
-        while(true){
+        datagramPacket = new DatagramPacket(message, message.length);
+        while (true) {
             try {
                 socket.setSoTimeout(5000);
-                socket.receive(p);
-                String data = new String(p.getData(), 0, p.getLength());
+                socket.receive(datagramPacket);
+                String data = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
                 String messageId = data.split(";")[0];
                 if (Objects.equals(messageId, packetId))
                     return data.split(";")[1];
                 else {
-                    System.out.println("Server>> can't identify packet id");
+                    System.out.println("currencyConverterApp>> can't identify packet id");
                 }
             } catch (SocketTimeoutException s) {
-                System.out.println("Client>> Timeout: more than 5 sec passed");
+                System.out.println("currencyConverterApp>> Timeout: more than 5 sec passed");
                 break;
             } catch (IOException e) {
                 e.printStackTrace();

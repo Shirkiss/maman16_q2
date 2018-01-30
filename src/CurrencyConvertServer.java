@@ -5,9 +5,12 @@ import java.net.InetAddress;
 
 
 /**
+ * CurrencyConvertServer.java
+ * Purpose: to convert currency value to other currency
+ *
  * @author Shir Cohen
  */
-public class UDPServer {
+public class CurrencyConvertServer {
 
     public static void main(String[] args) {
         try {
@@ -35,6 +38,13 @@ public class UDPServer {
         }
     }
 
+    /**
+     * Get the exchange rate of 2 currencies
+     *
+     * @param fromCurrency to identify the request
+     * @param toCurrency to identify the request
+     * @return the exchange rate
+     */
     private static double getExchangeRate(String fromCurrency, String toCurrency) {
         final double ILS_USD = 0.29;
         final double ILS_AUD = 0.36;
