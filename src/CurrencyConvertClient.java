@@ -1,12 +1,12 @@
 import javax.swing.*;
 
 /**
- * CurrencyConverClient.java
+ * CurrencyConvertClient.java
  * Purpose: app to convert currency value to other currency
  *
  * @author Shir Cohen
  */
-public class CurrencyConverClient {
+public class CurrencyConvertClient {
 
     public static void main(String[] args) {
         CurrencyConverterApp application = new CurrencyConverterApp();

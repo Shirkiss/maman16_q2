@@ -20,15 +20,15 @@ class CurrencyConverterApp extends JFrame {
     private JTextField valueField;
     private JComboBox currencyComboFrom;
     private JComboBox currencyComboTo;
-    private String[] currencies = {"USD", "EUR", "INR", "ILS", "AUD", "GBP"};
+    private String[] currencies;// = {"USD", "EUR", "INR", "ILS", "AUD", "GBP"};
     private DatagramPacket datagramPacket;
     private DatagramSocket socket;
 
     CurrencyConverterApp() {
-        super("currencyConverterApp");
+        super("Currency Converter App");
         JPanel currencyPanel = new JPanel(new GridLayout(4, 2, 10, 10));
         JPanel buttonPanel = new JPanel();
-
+        currencies = getCurrencies();
         JLabel valueLabel = new JLabel("Value:");
         JLabel currencyFromLabel = new JLabel("From:");
         JLabel currencyToLabel = new JLabel("To:");
@@ -50,10 +50,10 @@ class CurrencyConverterApp extends JFrame {
 
         JButton submitButton = new JButton("Convert");
         submitButton.addActionListener(e -> {
-            String message = currencies[currencyComboFrom.getSelectedIndex()] + "-" + currencies[currencyComboTo.getSelectedIndex()] + "-"
+            String message = currencies[currencyComboFrom.getSelectedIndex()] + ";" + currencies[currencyComboTo.getSelectedIndex()] + ";"
                     + valueField.getText();
             if (isValidValue(valueField.getText())) {
-                String packetId = sendMessage(message);
+                String packetId = sendMessage("convert", message);
                 String respond = getResponse(packetId);
                 if (respond != null)
                     resultField.setText(respond);
@@ -66,6 +66,18 @@ class CurrencyConverterApp extends JFrame {
         buttonPanel.add(submitButton);
         add(currencyPanel, BorderLayout.NORTH);
         add(buttonPanel, BorderLayout.SOUTH);
+    }
+
+    private String[] getCurrencies() {
+        String packetId = sendMessage("getCurrencies", null);
+        String respond = getResponse(packetId);
+        if (respond != null)
+            // from string of array to array of strings
+            return (respond.substring(1, respond.length() - 1)).split(", ");
+        else {
+            return new String[]{"USD", "EUR", "GBP"}; //default currencies
+        }
+
     }
 
     /**
@@ -91,7 +103,7 @@ class CurrencyConverterApp extends JFrame {
      *
      * @param message to send
      */
-    private String sendMessage(String message) {
+    private String sendMessage(String type, String message) {
         try {
             socket = new DatagramSocket();
             InetAddress address = InetAddress.getByName("localhost");
@@ -100,9 +112,8 @@ class CurrencyConverterApp extends JFrame {
 
             byte[] data;
             String packetId = dateFormat.format(date);
-
-            data = (packetId + ";" + message).getBytes();
-            System.out.println("currencyConverterApp>> Sending packet containing: " + data);
+            data = (type + ";" + packetId + ";" + message).getBytes();
+            System.out.println("currencyConverterApp>> Sending packet containing: " + packetId + ";" + message);
             datagramPacket = new DatagramPacket(data, data.length, address, 7777);
             socket.send(datagramPacket);
             return packetId;
