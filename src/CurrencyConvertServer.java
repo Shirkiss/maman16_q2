@@ -23,7 +23,7 @@ public class CurrencyConvertServer {
 
     public static void main(String[] args) {
         try {
-            socket = new DatagramSocket(7777);
+            socket = new DatagramSocket(4444);
             currencies = getCurrencies("C:\\Users\\shir.cohen\\Desktop\\studies\\Java\\maman16_Q2\\src\\currencies.txt");
             System.out.println("Server's Ready");
             while (true) {
@@ -92,14 +92,19 @@ public class CurrencyConvertServer {
         return currenciesList;
     }
 
+    /**
+     * Send message to the client
+     *
+     * @param message to send
+     */
     private static void sendData(String message) {
         try {
-            System.out.println("Server sending to client>>" + message);
             data = message.getBytes();
             InetAddress address = packet.getAddress();
             int port = packet.getPort();
             packet = new DatagramPacket(data, data.length, address, port);
             socket.send(packet);
+            System.out.println("Server sending to client>>" + message);
         } catch (IOException e) {
             e.printStackTrace();
         }

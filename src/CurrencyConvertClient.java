@@ -9,7 +9,7 @@ import javax.swing.*;
 public class CurrencyConvertClient {
 
     public static void main(String[] args) {
-        CurrencyConverterApp application = new CurrencyConverterApp();
+        CurrencyConverterApp application = new CurrencyConverterApp(args[0], 4444);
         application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         application.setSize(500, 400);
         application.setVisible(true);

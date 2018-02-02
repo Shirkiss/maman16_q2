@@ -20,15 +20,19 @@ class CurrencyConverterApp extends JFrame {
     private JTextField valueField;
     private JComboBox currencyComboFrom;
     private JComboBox currencyComboTo;
-    private String[] currencies;// = {"USD", "EUR", "INR", "ILS", "AUD", "GBP"};
+    private String[] currencies;
     private DatagramPacket datagramPacket;
     private DatagramSocket socket;
+    private String host;
+    private int port;
 
-    CurrencyConverterApp() {
+    CurrencyConverterApp(String host, int port) {
         super("Currency Converter App");
+        this.host = host;
+        this.port = port;
         JPanel currencyPanel = new JPanel(new GridLayout(4, 2, 10, 10));
         JPanel buttonPanel = new JPanel();
-        currencies = getCurrencies();
+        currencies = getCurrencies(); //get available currencies from the server
         JLabel valueLabel = new JLabel("Value:");
         JLabel currencyFromLabel = new JLabel("From:");
         JLabel currencyToLabel = new JLabel("To:");
@@ -68,6 +72,11 @@ class CurrencyConverterApp extends JFrame {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Get available currencies from the server
+     *
+     * @return list of currency codes that are available
+     */
     private String[] getCurrencies() {
         String packetId = sendMessage("getCurrencies", null);
         String respond = getResponse(packetId);
@@ -75,9 +84,13 @@ class CurrencyConverterApp extends JFrame {
             // from string of array to array of strings
             return (respond.substring(1, respond.length() - 1)).split(", ");
         else {
-            return new String[]{"USD", "EUR", "GBP"}; //default currencies
-        }
+            JOptionPane.showMessageDialog(null, "Couldn't get currencies from the server.\n" +
+                            "Please restart the program"
+                    , "Error",
+                    JOptionPane.PLAIN_MESSAGE, null);
+            return new String[]{""}; //return empty dropdown
 
+        }
     }
 
     /**
@@ -101,12 +114,13 @@ class CurrencyConverterApp extends JFrame {
     /**
      * Send message to the server
      *
+     * @param type    of message to send
      * @param message to send
      */
     private String sendMessage(String type, String message) {
         try {
             socket = new DatagramSocket();
-            InetAddress address = InetAddress.getByName("localhost");
+            InetAddress address = InetAddress.getByName(host);
             DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             Date date = new Date();
 
@@ -114,7 +128,7 @@ class CurrencyConverterApp extends JFrame {
             String packetId = dateFormat.format(date);
             data = (type + ";" + packetId + ";" + message).getBytes();
             System.out.println("currencyConverterApp>> Sending packet containing: " + packetId + ";" + message);
-            datagramPacket = new DatagramPacket(data, data.length, address, 7777);
+            datagramPacket = new DatagramPacket(data, data.length, address, port);
             socket.send(datagramPacket);
             return packetId;
         } catch (IOException e) {
